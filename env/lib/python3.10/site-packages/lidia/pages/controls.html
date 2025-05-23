@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Lidia controls view</title>
+  <link rel="stylesheet" href="static/style.css" />
+  <script src="static/socket.io.js"></script>
+</head>
+
+<body>
+  <svg id="mainSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2100 1200" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <path id="bottomTriangle" stroke-width="2" d="m0,0 l-34.64,60 h69.28 z" />
+      <path id="star" fill="#f74afd" stroke-width="2" d="M25,0 L9,9 L0,25 L-9,9 L-25,0 L-9,-9 L0,-25 L9,-9 z" />
+      <circle id="pointCircle" cx="0" cy="0" r="23" stroke-width="2" />
+      <path id="axisLimits" d="M-50 -30 v60 M-30 -30 v60 M30 -30 v60 M50 -30 v60" stroke-dasharray="3,3"
+        stroke-width="3" />
+      <path id="borderShort"
+        d="M0,-30 v60 h-5 l-17.32,-10 l17.32,-10 l-17.32,-10 l17.32,-10 l-17.32,-10 l17.32,-10 z" />
+      <!-- The larger width prevents wrapping -->
+      <pattern id="borderGreen" x="0" y="0" width="1.1" height=".06">
+        <use href="#borderShort" fill="#0f0" transform="translate(22.32 30)" />
+      </pattern>
+      <pattern id="borderRed" x="0" y="0" width="1.1" height=".06">
+        <use href="#borderShort" fill="#f00" transform="translate(22.32 30)" />
+      </pattern>
+      <rect id="borderLong" x="-22.32" y="-1000" width="22.32" height="1000" />
+    </defs>
+    <rect width="2150" height="1250" x="-25" y="-25" fill="#000" />
+    <!-- Region extents -->
+    <!-- <rect width="630" height="1200" x="0" y="0" fill="#700" />
+    <rect width="340" height="1200" x="630" y="0" fill="#070" />
+    <rect width="1130" height="1200" x="970" y="0" fill="#007" /> -->
+    <g id="textRegion" data-extents="0 630 1200 0">
+      <rect width="500" height="500" x="60" y="70" fill="none" stroke="#fff" stroke-width="5" rx="15" />
+      <rect width="150" height="30" x="125" y="55" fill="#000" />
+      <use id="cycFtr" href="#pointCircle" fill="#000" transform="translate(420 150)" />
+      <rect width="500" height="500" x="60" y="630" fill="none" stroke="#fff" stroke-width="5" rx="15" />
+      <rect width="225" height="30" x="125" y="615" fill="#000" />
+      <use id="collFtr" href="#pointCircle" fill="#000" transform="translate(420 710)" />
+      <text fill="#fff" font-size="50">
+        <tspan x="130" y="80" font-size="30">CYCLIC</tspan>
+        <tspan x="125" y="170">FTR</tspan>
+        <tspan x="125" y="245">LON POS</tspan>
+        <tspan id="cycLonPercent" x="400" y="245">0</tspan>
+        <tspan x="495" y="245">%</tspan>
+        <tspan x="125" y="320">LAT POS</tspan>
+        <tspan id="cycLatPercent" x="400" y="320">0</tspan>
+        <tspan x="495" y="320">%</tspan>
+        <tspan x="130" y="640" font-size="30">COLLECTIVE</tspan>
+        <tspan x="125" y="730">FTR</tspan>
+        <tspan x="125" y="805">POS</tspan>
+        <tspan id="collPercent" x="400" y="805">0</tspan>
+        <tspan x="495" y="805">%</tspan>
+      </text>
+    </g>
+    <g id="collectiveRegion" stroke="#fff" data-extents="0 970 1200 630">
+      <g id="collOrigin" transform="translate(805 1075) rotate(270)">
+        <rect id="collBackground" width="1000" height="60" x="0" y="-30" />
+        <use href="#collBackground" fill="#4d4d4d" stroke-width="5" />
+        <clipPath id="collClip">
+          <use href="#collBackground" />
+        </clipPath>
+
+        <use id="collBoundaryLow" href="#borderShort" fill="#0f0" stroke="none" display="none" />
+        <g id="collBoundaryHigh" fill="#0f0" stroke="none" display="none" transform="translate(1000)">
+          <use href="#borderShort" transform="scale(-1 1)" />
+        </g>
+        <g transform="translate(0 -30)">
+          <g id="collTrimIndicator">
+            <use href="#bottomTriangle" fill="#02f7fa" transform="scale(1 -1)" />
+            <path fill=" none" stroke-dasharray="12,12" stroke-width="4" d="M0,0 v60" />
+          </g>
+        </g>
+        <use href="#star" id="collTargetIndicator" />
+        <g clip-path="url(#collClip)">
+          <use id="collTargetLimits" href="#axisLimits" />
+        </g>
+        <g transform="translate(0 30)">
+          <use id="collInputIndicator" href="#bottomTriangle" fill="#f00" />
+        </g>
+      </g>
+    </g>
+    <g id="cyclicRegion" stroke="#fff" data-extents="0 2100 1200 970">
+      <g id="cycOrigin" transform="translate(1525 575)">
+        <rect id="cycBackground" width="1000" height="1000" x="-500" y="-500" />
+        <use href="#cycBackground" fill="#4d4d4d" stroke-width="5" />
+        <clipPath id="cycClip">
+          <use href="#cycBackground" />
+        </clipPath>
+
+        <g id="cycLatOrigin" transform="translate(0 500)">
+          <g id="cycLatTrimIndicator">
+            <path fill="none" stroke-dasharray="12,12" stroke-width="4" d="M0,0 v-1000" />
+            <use href="#bottomTriangle" fill="#02f7fa" />
+          </g>
+          <use id="cycBoundaryLeft" href="#borderLong" fill="url(#borderGreen)" stroke="none" display="none"
+            transform="translate(-500)" />
+          <g id="cycBoundaryRight" fill="url(#borderGreen)" stroke="none" display="none" transform="translate(500)">
+            <use href="#borderLong" transform="scale(-1 1)" />
+          </g>
+        </g>
+        <g id="cycLonOrigin" transform="translate(500 0) rotate(90) scale(1 -1)">
+          <g id="cycLonTrimIndicator">
+            <path fill=" none" stroke-dasharray="12,12" stroke-width="4" d="M0,0 v-1000" />
+            <use href="#bottomTriangle" fill="#02f7fa" />
+          </g>
+          <use id="cycBoundaryLow" href="#borderLong" fill="url(#borderGreen)" stroke="none" display="none"
+            transform="translate(-500)" />
+          <g id="cycBoundaryHigh" fill="url(#borderGreen)" stroke="none" display="none" transform="translate(500)">
+            <use href="#borderLong" transform="scale(-1 1)" />
+          </g>
+        </g>
+        <use href="#star" id="cycTargetIndicator" />
+        <g clip-path="url(#cycClip)">
+          <g id="cycTargetLimits" fill="none" stroke-dasharray="3,3" stroke-width="3">
+            <circle id="cycLimitCorrect" cx="0" cy="0" r="30" />
+            <circle id="cycLimitWarning" cx="0" cy="0" r="50" />
+          </g>
+        </g>
+        <use id="cycInputIndicator" href="#pointCircle" fill="#f00" />
+      </g>
+    </g>
+    <g id="rudderRegion" stroke="#fff" data-extents="1200 2100 1560 970">
+      <g id="ruddOrigin" transform="translate(1525 1295)">
+        <rect id="ruddBackground" width="1000" height="60" x="-500" y="-30" />
+        <use href="#ruddBackground" fill="#4d4d4d" stroke-width="5" />
+        <clipPath id="ruddClip">
+          <use href="#ruddBackground" />
+        </clipPath>
+
+        <use id="ruddBoundaryLeft" href="#borderShort" fill="#0f0" stroke="none" display="none" />
+        <g id="ruddBoundaryRight" fill="#0f0" stroke="none" display="none" transform="translate(1000)">
+          <use href="#borderShort" transform="scale(-1 1)" />
+        </g>
+        <g transform="translate(0 30)">
+          <g id="ruddTrimIndicator">
+            <use href="#bottomTriangle" fill="#02f7fa" />
+            <path fill=" none" stroke-dasharray="12,12" stroke-width="4" d="M0,0 v-60" />
+          </g>
+        </g>
+        <use href="#star" id="ruddTargetIndicator" />
+        <g clip-path="url(#ruddClip)">
+          <use href="#axisLimits" id="ruddTargetLimits" />
+        </g>
+        <g transform="translate(0 -30) scale(1 -1)">
+          <use id="ruddInputIndicator" href="#bottomTriangle" fill="#f00" />
+        </g>
+      </g>
+    </g>
+  </svg>
+  <script src="static/controls.js"></script>
+  <script type="text/javascript">
+    let svgElem = document.getElementById("mainSvg");
+    addControls(svgElem);
+  </script>
+  <script type="text/javascript">
+    var socket = io();
+
+    socket.on("echo", (s) => {
+      console.log(s);
+    });
+  </script>
+  <script type="text/javascript">
+    var socket = io();
+    var config = {
+      ok_tolerance: 0.03,
+      warn_tolerance: 0.05,
+    };
+
+    function errorFill(difference) {
+      var e = Math.abs(difference);
+      if (e <= config.ok_tolerance) return "#0f0";
+      else if (e <= config.warn_tolerance) return "#ff0";
+      else return "#f00";
+    }
+
+    function limitRange(elem, oneSided = false) {
+      const outsideLimit = 10;
+      let rangeMin = oneSided ? 0 : -500;
+      let rangeMax = oneSided ? 1000 : 500;
+      let x = elem.transform.baseVal.getItem(0).matrix.e;
+      let y = elem.transform.baseVal.getItem(0).matrix.f;
+
+      // Clamp translate
+      elem.transform.baseVal.getItem(0).matrix.e = Math.max(
+        rangeMin - outsideLimit,
+        Math.min(rangeMax + outsideLimit, x)
+      );
+      elem.transform.baseVal.getItem(0).matrix.f = Math.max(
+        rangeMin - outsideLimit,
+        Math.min(rangeMax + outsideLimit, y)
+      );
+
+      let inside = x >= rangeMin && x <= rangeMax && y >= rangeMin && y <= rangeMax;
+      elem.style.stroke = inside ? "inherit" : "#f00";
+    }
+
+    const collInput = document.getElementById("collInputIndicator");
+    const cycInput = document.getElementById("cycInputIndicator");
+    const ruddInput = document.getElementById("ruddInputIndicator");
+    const collPercent = document.getElementById("collPercent");
+    const cycLatPercent = document.getElementById("cycLatPercent");
+    const cycLonPercent = document.getElementById("cycLonPercent");
+    function updateControl(s) {
+      collInput.setAttribute("transform", `translate(${s.ctrl[4] * 1000})`);
+      limitRange(collInput, true);
+      cycInput.setAttribute("transform", `translate(${s.ctrl[0] * 500} ${s.ctrl[1] * 500})`);
+      limitRange(cycInput);
+      ruddInput.setAttribute("transform", `translate(${s.ctrl[3] * 500})`);
+      limitRange(ruddInput);
+
+      collPercent.textContent = Math.round(s.ctrl[4] * 100);
+      // Goes from 0% on the left and 100% on the right instead of -1 to +1
+      cycLatPercent.textContent = Math.round((s.ctrl[0] + 1) * 50);
+      // Same as roll, but reversed: 0% is pulling the stick to +1
+      cycLonPercent.textContent = Math.round((1 - s.ctrl[1]) * 50);
+    }
+
+    const collTarget = document.getElementById("collTargetIndicator");
+    const collTargetLimits = document.getElementById("collTargetLimits");
+    const cycTarget = document.getElementById("cycTargetIndicator");
+    const cycTargetLimits = document.getElementById("cycTargetLimits");
+    const ruddTarget = document.getElementById("ruddTargetIndicator");
+    const ruddTargetLimits = document.getElementById("ruddTargetLimits");
+    function updateTarget(s) {
+      collTarget.setAttribute("transform", `translate(${s.trgt.ctrl[4] * 1000})`);
+      limitRange(collTarget, true);
+      cycTarget.setAttribute("transform", `translate(${s.trgt.ctrl[0] * 500} ${s.trgt.ctrl[1] * 500})`);
+      limitRange(cycTarget);
+      ruddTarget.setAttribute("transform", `translate(${s.trgt.ctrl[3] * 500})`);
+      limitRange(ruddTarget);
+
+      collTargetLimits.setAttribute("transform", `translate(${s.trgt.ctrl[4] * 1000})`);
+      cycTargetLimits.setAttribute("transform", `translate(${s.trgt.ctrl[0] * 500} ${s.trgt.ctrl[1] * 500})`);
+      ruddTargetLimits.setAttribute("transform", `translate(${s.trgt.ctrl[3] * 500})`);
+
+      if ("ctrl" in s) {
+        collInput.style.fill = errorFill(s.ctrl[4] - s.trgt.ctrl[4]);
+        // The error is defined in terms of percent of range and these go -1 to +1, so divide by 2
+        cycInput.style.fill = errorFill(
+          Math.sqrt(Math.pow(s.ctrl[0] - s.trgt.ctrl[0], 2) + Math.pow(s.ctrl[1] - s.trgt.ctrl[1], 2)) / 2
+        );
+        ruddInput.style.fill = errorFill((s.ctrl[3] - s.trgt.ctrl[3]) / 2);
+      }
+    }
+
+    const collTrim = document.getElementById("collTrimIndicator");
+    const cycLatTrim = document.getElementById("cycLatTrimIndicator");
+    const cycLonTrim = document.getElementById("cycLonTrimIndicator");
+    const ruddTrim = document.getElementById("ruddTrimIndicator");
+    function updateTrim(s) {
+      collTrim.setAttribute("transform", `translate(${s.trim.ctrl[4] * 1000})`);
+      limitRange(collTrim, true);
+      cycLatTrim.setAttribute("transform", `translate(${s.trim.ctrl[0] * 500})`);
+      limitRange(cycLatTrim);
+      cycLonTrim.setAttribute("transform", `translate(${s.trim.ctrl[1] * 500})`);
+      limitRange(cycLonTrim);
+      ruddTrim.setAttribute("transform", `translate(${s.trim.ctrl[3] * 500})`);
+      limitRange(ruddTrim);
+    }
+
+    const collBoundaryLow = document.getElementById("collBoundaryLow");
+    const collBoundaryHigh = document.getElementById("collBoundaryHigh");
+    const cycBoundaryLow = document.getElementById("cycBoundaryLow");
+    const cycBoundaryHigh = document.getElementById("cycBoundaryHigh");
+    const cycBoundaryLeft = document.getElementById("cycBoundaryLeft");
+    const cycBoundaryRight = document.getElementById("cycBoundaryRight");
+    const ruddBoundaryLeft = document.getElementById("ruddBoundaryLeft");
+    const ruddBoundaryRight = document.getElementById("ruddBoundaryRight");
+    function updateBorderPair(input, lowBdr, highBdr, lowRef, highRef, oneSided = false, pattern = false) {
+      if (lowBdr === (oneSided ? 0.0 : -1.0) && highBdr === 1.0) {
+        lowRef.style.display = "none";
+        highRef.style.display = "none";
+        return;
+      } else {
+        lowRef.style.display = "block";
+        highRef.style.display = "block";
+      }
+
+      lowRef.setAttribute("transform", `translate(${lowBdr * (oneSided ? 1000 : 500)})`);
+      highRef.setAttribute("transform", `translate(${highBdr * (oneSided ? 1000 : 500)})`);
+
+      if (input < lowBdr) lowRef.style.fill = pattern ? "url(#borderRed)" : "#f00";
+      else lowRef.style.fill = pattern ? "url(#borderGreen)" : "#0f0";
+      if (input > highBdr) highRef.style.fill = pattern ? "url(#borderRed)" : "#f00";
+      else highRef.style.fill = pattern ? "url(#borderGreen)" : "#0f0";
+    }
+    function updateBorders(s) {
+      updateBorderPair(s.ctrl[4], s.brdr.low[4], s.brdr.high[4], collBoundaryLow, collBoundaryHigh, true);
+      updateBorderPair(s.ctrl[0], s.brdr.low[0], s.brdr.high[0], cycBoundaryLeft, cycBoundaryRight, false, true);
+      updateBorderPair(s.ctrl[1], s.brdr.low[1], s.brdr.high[1], cycBoundaryLow, cycBoundaryHigh, false, true);
+      updateBorderPair(s.ctrl[3], s.brdr.low[3], s.brdr.high[3], ruddBoundaryLeft, ruddBoundaryRight, false, false);
+    }
+
+    const collFtr = document.getElementById("collFtr");
+    const cycFtr = document.getElementById("cycFtr");
+    function updateButtons(s) {
+      cycFtr.style.fill = s.btn[0] & (1 << 0) ? "#ff0" : "#000";
+      collFtr.style.fill = s.btn[0] & (1 << 1) ? "#ff0" : "#000";
+    }
+
+    function updateLimits() {
+      let correct = config.ok_tolerance * 1000;
+      let warning = config.warn_tolerance * 1000;
+      document.getElementById("axisLimits").setAttribute("d",
+        `M-${warning} -30 v60 M-${correct} -30 v60 M${correct} -30 v60 M${warning} -30 v60`);
+      document.getElementById("cycLimitCorrect").setAttribute("r", correct);
+      document.getElementById("cycLimitWarning").setAttribute("r", warning);
+    }
+
+    socket.on("smol", (s) => {
+      if ("ctrl" in s) updateControl(s);
+      if ("trgt" in s) updateTarget(s);
+      if ("trim" in s) updateTrim(s);
+      if ("brdr" in s) updateBorders(s);
+      if ("btn" in s) updateButtons(s);
+    });
+    socket.on("config", (c) => {
+      if ("rpctask" in c) {
+        config = c.rpctask;
+        updateLimits();
+      }
+    });
+    socket.emit("config_request", {});
+  </script>
+</body>
+
+</html>

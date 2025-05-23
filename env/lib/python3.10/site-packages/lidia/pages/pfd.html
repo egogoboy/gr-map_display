@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+  <title>Lidia PFD</title>
+  <meta charset="UTF-8">
+  <style type="text/css">
+    .tapeBackground {
+      fill: gray;
+    }
+
+    .tapeContour {
+      fill: none;
+      stroke: white;
+      stroke-width: 5;
+    }
+  </style>
+  <link rel="stylesheet" href="static/style.css" />
+  <script src="static/socket.io.js"></script>
+</head>
+
+<body>
+  <svg id="mainSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2100 1200" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <path id="attTarget"
+        d="M -2,0 a 2,2 0 0,0 4,0 a 2,2 0 0,0 -4,0 M -1.5,0 h-2 l-2,-0.9 h-4 M 1.5,0 h2 l2,-0.9 h4 M 0,1.5 v1 M 0,-1.5 v-2"
+        stroke-linecap="round" fill="none" />
+      <path id="flightpathVector" d="M -2,0 a 2,2 0 0,0 4,0 a 2,2 0 0,0 -4,0 M -2,0 h-3.5 M 2,0 h3.5 M 0,-2 v-1.5"
+        stroke-linecap="square" fill="none" />
+      <g id="flightpathRetrograde" stroke-linecap="square" fill="none">
+        <path d="M -2,0 a 2,2 0 0,0 4,0 a 2,2 0 0,0 -4,0 M 0,-2 v-2 M -1.73, 1 l -1.73, 1 M 1.73, 1 l 1.73, 1" />
+        <path d="M -2.82,-2.82 L 2.82,2.82 M -2.82,2.82 L 2.82,-2.82" transform="scale(0.5)" />
+      </g>
+      <!-- Duplication of label code, because the <use> element creates a closed shadow root, inaccessible to outside JS -->
+      <g id="trafficOT">
+        <polygon points="-10,0 0,12 10,0 0,-12" fill="none" stroke-width="3" />
+        <text x="15" y="-25" text-anchor="end" dominant-baseline="central" font-size="25" stroke="none">+00</text>
+        <path d="M 20,13 v-17 h5 l-5,-8 l-5,8 h5" stroke-width="3" transform="scale(1,1)" />
+      </g>
+      <g id="trafficPD">
+        <polygon points="-10,0 0,12 10,0 0,-12" />
+        <text x="15" y="-25" text-anchor="end" dominant-baseline="central" font-size="25" stroke="none">+00</text>
+        <path d="M 20,13 v-17 h5 l-5,-8 l-5,8 h5" stroke-width="3" transform="scale(1,1)" />
+      </g>
+      <g id="trafficTA">
+        <circle cx="0" cy="0" r="10" stroke="none" />
+        <text x="15" y="-25" text-anchor="end" dominant-baseline="central" font-size="25" stroke="none">+00</text>
+        <path d="M 20,13 v-17 h5 l-5,-8 l-5,8 h5" stroke-width="3" transform="scale(1,1)" />
+      </g>
+      <g id="trafficRA">
+        <rect x="-9" y="-9" width="18" height="18" />
+        <text x="15" y="-25" text-anchor="end" dominant-baseline="central" font-size="25" stroke="none">+00</text>
+        <path d="M 20,13 v-17 h5 l-5,-8 l-5,8 h5" stroke-width="3" transform="scale(1,1)" />
+      </g>
+    </defs>
+    <g id="autopilotRegion" data-extents="0 1325 30 775">
+      <path id="PIC" d="M1050 15 v5 h15 v 10 l15 -15 l-15 -15 v10 h-15 z" fill="var(--pfdGreen)" stroke="none" />
+    </g>
+
+    <g id="adiRegion" data-extents="35 1325 585 775">
+      <g transform="translate(1050 310)">
+        <rect id="adiBackground" x="-275" y="-275" height="550" width="550" rx="25" />
+        <circle id="adiInnerBackground" cx="0" cy="0" r="240" />
+        <clipPath id="adiClip">
+          <use href="#adiBackground" />
+        </clipPath>
+        <clipPath id="adiInnerClip">
+          <use href="#adiInnerBackground" />
+        </clipPath>
+
+        <g clip-path="url(#adiClip)">
+          <g transform="scale(8)">
+            <g id="adiHorizon">
+              <rect x="-150" y="-150" width="300" height="150" fill="var(--pfdSky)" stroke="none" />
+              <rect x="-150" y="0" width="300" height="150" fill="var(--pfdGround)" stroke="none" />
+              <path d="M-150 0 h300" stroke="white" stroke-width="1.25" />
+            </g>
+          </g>
+        </g>
+
+        <use href="#adiInnerBackground" fill="white" fill-opacity="0.1" />
+        <g id="adiRollTicks" fill="white" stroke="white" stroke-width="3">
+          <path d="m0 -240 l15 -20 h-30 z" stroke="none" />
+          <path d="m0 -240 v-20" transform="rotate(10)" />
+          <path d="m0 -240 v-20" transform="rotate(20)" />
+          <path d="m0 -240 v-20" transform="rotate(30)" />
+          <path d="m0 -240 v-20" transform="rotate(60)" />
+          <path d="m0 -240 v-20" transform="rotate(-10)" />
+          <path d="m0 -240 v-20" transform="rotate(-20)" />
+          <path d="m0 -240 v-20" transform="rotate(-30)" />
+          <path d="m0 -240 v-20" transform="rotate(-60)" />
+          <path d="m0 -240 l10 -15 h-20 z" stroke="none" transform="rotate(45)" />
+          <path d="m0 -240 l10 -15 h-20 z" stroke="none" transform="rotate(-45)" />
+          <path id="adiRollTargetIndicator" d="m0 -240 l15-20 h-30 z" fill="var(--pfdMagenta)" stroke="black"
+            stroke-width="2" display="none" transform="rotate(0)" />
+        </g>
+
+        <g clip-path="url(#adiInnerClip">
+          <g transform="scale(8)">
+            <g id="adiInnerHorizon" fill="white" stroke="white" stroke-width="0.625" font-size="5"
+              dominant-baseline="central">
+              <path d="m-2.5 -7.5 h5" />
+              <path d="m-2.5 -2.5 h5" />
+              <path d="m-2.5 2.5 h5" />
+              <path d="m-2.5 7.5 h5" />
+              <!-- Other ticks generated with script -->
+            </g>
+            <g id="flightpathIndicator" display="none">
+              <!-- <use href="#flightpathVector" stroke="black" stroke-width="1.0" /> -->
+              <use href="#flightpathVector" stroke="var(--pfdGreen)" stroke-width="0.625" />
+            </g>
+            <g id="flightpathRetrogradeIndicator" display="none">
+              <!-- <use href="#flightpathRetrograde" stroke="black" stroke-width="1.0" /> -->
+              <use href="#flightpathRetrograde" stroke="var(--pfdGreen)" stroke-width="0.625" />
+            </g>
+            <g id="adiTargetIndicator" display="none">
+              <use href="#attTarget" stroke="black" stroke-width="1.0" />
+              <use href="#attTarget" stroke="var(--pfdMagenta)" stroke-width="0.625" />
+            </g>
+          </g>
+        </g>
+
+        <g fill="white" stroke="black" stroke-width="1.5">
+          <!-- <path d="M0 -5 l-100 30 h200 z" /> -->
+          <path d="m70 25 h15 v-20 h100 v-15 h-115 z" />
+          <path d="m-70 25 h-15 v-20 h-100 v-15 h115 z" />
+          <circle cx="0" cy="0" r="10" />
+          <g id="adiRoll">
+            <path d="m0 -240 l15 20 h-30 z" />
+            <g transform="translate(0 -240) scale(30)" stroke-width="0.05">
+              <path id="adiSlipskidIndicator" d="m0.55 0.7333 l0.15 0.2 h-1.4 l0.15 -0.2 z" />
+            </g>
+          </g>
+        </g>
+      </g>
+    </g>
+
+    <g id="vsiRegion" data-extents="35 1505 585 1345">
+      <g transform="translate(1050 310)">
+        <path d="M300 0 v-200 l50 -70 h100 v540 h-100 l-50 -70 z" fill="gray" stroke="white" stroke-width="5" />
+        <path d="M380 0 h70" stroke="white" stroke-width="8" />
+        <g id="vsiTicks" stroke="white" stroke-width="5">
+          <path d="M380 33.1 L405 35.3 M380 66.0 L405 70.3 M380 98.4 L405 104.8 M380 130.0
+          L405 138.5 M380 160.6 L405 171.2 M380 190.0 L405 202.5 M380 218.0 L405 232.3" />
+          <path d="M380 160.6 L415 175.4 M380 218.0 L415 238.0" />
+        </g>
+        <use xlink:href="#vsiTicks" transform="scale (1, -1)" />
+        <g id="vsiText" fill="white" font-size="40" dominant-baseline="central" transform="translate(420)">
+          <text y="-240">2</text>
+          <text y="-180">1</text>
+          <text y="180">1</text>
+          <text y="240">2</text>
+        </g>
+        <line id="vsiIndicator" x1="320" y1="0" x2="370" y2="0" stroke="var(--pfdGreen)" stroke-width="8" />
+        <line id="vsiTargetIndicatorContour" x1="378" y1="0" x2="417" y2="0" stroke="black" stroke-width="12"
+          display="none" />
+        <line id="vsiTargetIndicator" x1="380" y1="0" x2="415" y2="0" stroke="var(--pfdMagenta)" stroke-width="8"
+          display="none" />
+      </g>
+    </g>
+
+    <g id="vsidialRegionIgnored" display="none" data-extents="25 2080 585 1520">
+      <g transform="translate(1800 310)">
+        <circle cx="0" cy="0" r="275" fill="black" stroke="white" stroke-width="5" />
+        <g id="vsidialDial" text-anchor="middle" dominant-baseline="central" fill="white" stroke="white" font-size="50"
+          stroke-width="8">
+          <text x="0" y="-60" stroke="none">VSI</text>
+          <g font-size="30" stroke="none">
+            <text x="0" y="50">x100</text>
+            <text x="0" y="80">FT/MIN</text>
+            <text x="-120" y="-30">UP</text>
+            <text x="-120" y="30">DN</text>
+          </g>
+
+          <!-- Ticks generated with script -->
+        </g>
+        <g id="vsidialIndicator" stroke-width="5" stroke="white">
+          <path d="M0 0 h-150 v25 l-50 -25 l50 -25 v25" fill="white" />
+          <circle cx="0" cy="0" r="15" fill="black" />
+        </g>
+      </g>
+    </g>
+
+    <g id="altRegion" data-extents="-15 1725 635 1545">
+      <g transform="translate(1550 310)">
+        <rect id="altBackground" x="0" y="-270" width="170" height="540" />
+        <use href="#altBackground" class="tapeBackground" />
+        <use href="#altBackground" class="tapeContour" />
+
+        <clipPath id="altClip">
+          <use href="#altBackground" />
+        </clipPath>
+
+        <g clip-path="url(#altClip)">
+          <g transform="scale(0.5)">
+            <g id="altTape" transform="translate(0 0)" fill="white" font-size="80" text-anchor="end"
+              dominant-baseline="central" stroke="white">
+              <!-- Ticks generated with script -->
+              <path id="altTargetIndicator" transform="translate(0 -0)" d="m0 0 l 48 -48 v-24 h-48 v144 h48 v-24 z"
+                fill="var(--pfdMagenta)" stroke-width="4.8" stroke="black" display="none" />
+            </g>
+          </g>
+        </g>
+        <use href="#altBackground" class="tapeContour" />
+
+        <g id="altReadout">
+          <path id="altReadoutBackground" d="m5 0 l30 30 h75 v25 h60 v-110 h-60 v25 h-75 z" />
+          <clipPath id="altReadoutClip">
+            <use href="#altReadoutBackground" />
+          </clipPath>
+          <g clip-path="url(#altReadoutClip)" text-anchor="end" dominant-baseline="central">
+            <g transform="scale(40)" fill="var(--pfdGreen)" font-size="1.2">
+              <g id="altThousandsTape" transform="translate(0 0)">
+                <text id="altThousandsValue" x="2.1" y="0">0</text>
+                <text id="altThousandsNext" x="2.1" y="-1" display="none">1</text>
+              </g>
+              <g id="altHundredsTape" transform="translate(0 0)">
+                <text id="altHundredsValue" x="2.8" y="0">0</text>
+                <text id="altHundredsNext" x="2.8" y="-1" display="none">1</text>
+              </g>
+            </g>
+            <g transform="scale(1.75) translate(94.5 0)">
+              <g id="altReadoutTape" transform="translate(0 0)" fill="var(--pfdGreen)" font-size="24">
+                <text x="0" y="-140">40</text>
+                <text x="0" y="-120">20</text>
+                <text x="0" y="-100">00</text>
+                <text x="0" y="-80">80</text>
+                <text x="0" y="-60">60</text>
+                <text x="0" y="-40">40</text>
+                <text x="0" y="-20">20</text>
+                <text x="0" y="0">00</text>
+                <text x="0" y="20">20</text>
+                <text x="0" y="40">40</text>
+                <text x="0" y="60">60</text>
+                <text x="0" y="80">80</text>
+                <text x="0" y="100">00</text>
+                <text x="0" y="120">20</text>
+                <text x="0" y="140">40</text>
+              </g>
+            </g>
+          </g>
+          <use href="#altReadoutBackground" class="tapeContour" />
+          <g id="altReadoutNegative" display="none">
+            <rect id="altReadoutNegativeBackground" x="30" y="30" width="80" height="25" />
+            <text x="70" y="42.5" text-anchor="middle" dominant-baseline="central" font-size="24" font-weight="700"
+              fill="var(--pfdAmber)">NEG</text>
+            <use href="#altReadoutNegativeBackground" class="tapeContour" />
+          </g>
+        </g>
+        <g id="altQnh" dominant-baseline="central" font-size="40" text-anchor="middle">
+          <text id="altQnhValue" x="85" y="294" fill="var(--pfdCyan)">STD</text>
+          <rect x="0" y="270" width="170" height="50" class="tapeContour" />
+        </g>
+        <g id="altTargetReadout" dominant-baseline="central" font-size="40" text-anchor="middle" display="none">
+          <text id="altTargetReadoutValue" x="85" y="-296" fill="var(--pfdMagenta)">0</text>
+          <rect x="0" y="-320" width="170" height="50" class="tapeContour" />
+        </g>
+      </g>
+    </g>
+
+    <g id="iasRegion" data-extents="-15 755 635 575">
+      <g transform="translate(750 310)">
+        <rect id="iasBackground" x="-170" y="-270" width="170" height="540" />
+        <use href="#iasBackground" class="tapeBackground" />
+        <clipPath id="iasClip">
+          <use href="#iasBackground" />
+        </clipPath>
+
+        <g clip-path="url(#iasClip)">
+          <g transform="scale(6)">
+            <g id="iasTape" transform="translate(0 0)" fill="white" font-size="6" text-anchor="end"
+              dominant-baseline="central" stroke="white" stroke-width="1">
+              <path id="iasVne" transform="translate(0 -167)" d="m0 0 h-30 " stroke="var(--pfdRed)" stroke-width="2" />
+              <g id="iasTapeTicks">
+                <path d="m0 10 h-10" />
+                <path d="m0 20 h-10" />
+                <path d="m0 30 h-10" />
+                <path d="m0 40 h-10" />
+                <!-- Other ticks generated with script -->
+              </g>
+              <path id="iasTargetIndicator" transform="translate(0 -0)" d="m0 0 l -4 -4 v-2 h4 v12 h-4 v-2 z"
+                fill="var(--pfdMagenta)" stroke-width="0.4" stroke="black" display="none" />
+            </g>
+          </g>
+        </g>
+        <use href="#iasBackground" class="tapeContour" />
+        <g id="iasReadout">
+          <path id="iasReadoutBackground" d="m-5 0 l-30 -30 h-135 v60 h135 z" />
+          <clipPath id="iasReadoutClip">
+            <use href="#iasReadoutBackground" />
+          </clipPath>
+          <g clip-path="url(#iasReadoutClip)" text-anchor="end" dominant-baseline="central">
+            <g transform="scale(40)" fill="var(--pfdGreen)" font-size="1.2">
+              <g id="iasTensTape" transform="translate(0 0)">
+                <text id="iasTensValue" x="-1.5" y="0">0</text>
+                <text id="iasTensNext" x="-1.5" y="-1" display="none">1</text>
+              </g>
+              <g id="iasHundredsTape" transform="translate(0 0)">
+                <text id="iasHundredsValue" x="-2.2" y="0">0</text>
+                <text id="iasHundredsNext" x="-2.2" y="-1" display="none">1</text>
+              </g>
+            </g>
+            <g transform="scale(35)">
+              <g id="iasReadoutTape" transform="translate(0 0)" fill="var(--pfdGreen)" font-size="1.2">
+                <text x="-1" y="-10">0</text>
+                <text x="-1" y="-9">9</text>
+                <text x="-1" y="-8">8</text>
+                <text x="-1" y="-7">7</text>
+                <text x="-1" y="-6">6</text>
+                <text x="-1" y="-5">5</text>
+                <text x="-1" y="-4">4</text>
+                <text x="-1" y="-3">3</text>
+                <text x="-1" y="-2">2</text>
+                <text x="-1" y="-1">1</text>
+                <text x="-1" y="0">0</text>
+                <text x="-1" y="1">9</text>
+              </g>
+            </g>
+          </g>
+          <use href="#iasReadoutBackground" class="tapeContour" />
+        </g>
+        <g id="iasGroundspeed" dominant-baseline="central" font-size="40">
+          <text x="-160" y="294" fill="white">GS</text>
+          <text id="iasGroundspeedValue" x="-10" y="294" fill="var(--pfdAmber)" text-anchor="end">---</text>
+          <rect x="-170" y="270" width="170" height="50" class="tapeContour" />
+        </g>
+        <g id="iasTargetReadout" dominant-baseline="central" font-size="40" text-anchor="middle" display="none">
+          <text id="iasTargetReadoutValue" x="-85" y="-296" fill="var(--pfdMagenta)">0</text>
+          <rect x="-170" y="-320" width="170" height="50" class="tapeContour" />
+        </g>
+      </g>
+    </g>
+
+    <g id="rhtRegion" data-extents="660 1805 1220 1545">
+      <g transform="translate(1550 940)">
+        <rect id="rhtBackground" x="0" y="-275" height="550" width="250" />
+        <use href="#rhtBackground" class="tapeBackground" />
+        <use href="#rhtBackground" class="tapeContour" />
+        <clipPath id="rhtClip">
+          <use href="#rhtBackground" />
+        </clipPath>
+        <g clip-path="url(#rhtClip)">
+          <g transform="scale(1 1)">
+            <g id="rhtTape" transform="translate(0 0)" fill="white" stroke="white" stroke-width="5"
+              dominant-baseline="central" font-size="40">
+              <rect x="0" y="0" height="10" width="250" fill="white" stroke="none" />
+              <rect x="0" y="10" height="500" width="500" fill="var(--pfdGround)" stroke="none" />
+
+              <!-- Ticks generated with script -->
+            </g>
+          </g>
+        </g>
+        <path d="M250 0 v-25 h-150 l-50 25 l50 25 h150 z" stroke="white" stroke-width="5" />
+        <text id="rhtValue" x="245" y="0" fill="var(--pfdAmber)" font-size="48" text-anchor="end"
+          dominant-baseline="central">---</text>
+      </g>
+    </g>
+
+    <g id="rpmRegion" data-extents="660 755 1220 575">
+      <g transform="translate(750 940)">
+        <rect id="rpmBackground" x="-170" y="-275" height="550" width="170" />
+        <use href="#rpmBackground" class="tapeContour" />
+        <g text-anchor="middle" font-size="50" fill="white" transform="translate(-85)">
+          <text id="rpmEName" x="-30" y="-200">E</text>
+          <text id="rpmRName" x="30" y="-200">R</text>
+          <g font-size="30" text-anchor="end">
+            <text id="rpmEReadout" x="-5" y="240">00%</text>
+            <text id="rpmRReadout" x="80" y="240">00%</text>
+          </g>
+        </g>
+        <g transform="translate(-85 180) rotate(-90) scale(3)">
+          <!-- Engine RPM -->
+          <g transform="translate(0 -10)">
+            <rect id="rpmEBackground" y="-4.5" x="-1.5" height="9" width="123" fill="var(--pfdRed)" />
+            <rect id="rpmEFillLow" y="-3" x="0" height="6" width="100" fill="var(--pfdRed)" />
+            <rect id="rpmEFillHigh" y="-3" x="100" height="6" width="20" fill="black" />
+            <rect id="rpmETapeWarn" y="-4.5" x="97" height="9" width="6" fill="var(--pfdAmber)" />
+            <rect id="rpmETapeGood" y="-4.5" x="97" height="9" width="6" fill="var(--pfdGreen)" />
+            <path id="rpmEIndicator" d="M0 -4.5 l5 -10 h-10 z" fill="var(--pfdRed)" transform="translate(0)" />
+          </g>
+          <!-- Rotor RPM -->
+          <g transform="translate(0 10)">
+            <rect id="rpmRBackground" y=" -4.5" x="-1.5" height="9" width="123" fill="var(--pfdRed)" />
+            <rect id="rpmRFillLow" y="-3" x="0" height="6" width="100" fill="var(--pfdRed)" />
+            <rect id="rpmRFillHigh" y="-3" x="100" height="6" width="20" fill="black" />
+            <rect id="rpmRTapeWarn" y="-4.5" x="90" height="9" width="20" fill="var(--pfdAmber)" />
+            <rect id="rpmRTapeGood" y="-4.5" x="97" height="9" width="6" fill="var(--pfdGreen)" />
+            <path id="rpmRIndicator" d="M0 4.5 l5 10 h-10 z" fill="var(--pfdRed)" transform="translate(0)" />
+          </g>
+        </g>
+      </g>
+    </g>
+
+    <g id="hsiRegion" data-extents="595 1325 1230 775">
+      <g transform="translate(1050 950)">
+        <circle cx="0" cy="0" r="275" fill="black" stroke="none" />
+        <circle cx="0" cy="0" r="80" fill="none" stroke="gray" stroke-dasharray="3,9" stroke-width="3" />
+        <circle id="hsiTrafficPerimeter" cx="0" cy="0" r="160" fill="none" stroke="gray" stroke-dasharray="3,6"
+          stroke-width="3" />
+        <g dominant-baseline="central" font-size="40" text-anchor="middle" transform="translate(0 -280)">
+          <text x="-40" y="-40" fill="white" text-anchor="end" font-size="25">HDG</text>
+          <text id="hsiValue" x="0" y="-40" fill="white">000</text>
+          <text id="hsiTargetValue" x="60" y="-40" text-anchor="start" font-size="35" fill="var(--pfdMagenta)"
+            display="none">000</text>
+          <path d="M0 0 l20 -20 h-40 z" stroke="white" stroke-width="5" />
+        </g>
+        <g id="hsiWheel" text-anchor="middle" dominant-baseline="hanging" fill="white" font-size="40" font-weight="600"
+          transform="rotate(0)">
+          <g id="hsiTargetIndicator" transform="rotate(0)" display="none">
+            <path d="M0 -280 l20 -20 h10 v20 h-60 v-20 h10 z" fill="black" stroke="var(--pfdMagenta)"
+              stroke-width="5" />
+          </g>
+          <text x="0" y="-225">N</text>
+          <text x="0" y="-225" transform="rotate(30)">3</text>
+          <text x="0" y="-225" transform="rotate(60)">6</text>
+          <text x="0" y="-225" transform="rotate(90)">E</text>
+          <text x="0" y="-225" transform="rotate(120)">12</text>
+          <text x="0" y="-225" transform="rotate(150)">15</text>
+          <text x="0" y="-225" transform="rotate(180)">S</text>
+          <text x="0" y="-225" transform="rotate(210)">21</text>
+          <text x="0" y="-225" transform="rotate(240)">24</text>
+          <text x="0" y="-225" transform="rotate(270)">W</text>
+          <text x="0" y="-225" transform="rotate(300)">30</text>
+          <text x="0" y="-225" transform="rotate(330)">33</text>
+
+          <!-- Ticks generated with script -->
+        </g>
+        <g id="hsiTraffic">
+          <g id="hsiTrafficOT" fill="white" stroke="white">
+          </g>
+          <g id="hsiTrafficPD" fill="white" stroke="white">
+          </g>
+          <g id="hsiTrafficTA" fill="var(--pfdAmber)" stroke="var(--pfdAmber)">
+          </g>
+          <g id="hsiTrafficRA" fill="var(--pfdRed)" stroke="var(--pfdRed)">
+          </g>
+        </g>
+        <g id="hsiHeli" transform="scale(0.75)">
+          <ellipse cx="0" cy="0" rx="12" ry="30" fill="white" />
+          <path d="M0 0 v60 M-7 50 h15" stroke-width="5" stroke="white" />
+          <path d="M-32 -32 l64 64 M-32 32 l64 -64" stroke-width="8" stroke="white" />
+        </g>
+      </g>
+    </g>
+
+    <g id="infoRegionIgnored" display="none">
+      <g id="wind_indicator">
+        <circle cx="1350" cy="660" r="40" stroke="white" stroke-width="3" />
+        <path id="wind_arrow" d="m1350 695 v-70 l-15 20 h30 l -15 -20" fill="white" stroke="white" stroke-width="5" />
+        <text id="wind_speed" fill="white" font-size="40" transform="translate(1400 670)">0</text>
+      </g>
+
+      <g id="general_info" fill="white" font-size="30" font-weight="500">
+        <g id="OAT">
+          <text transform="translate(1400 750)">OAT</text>
+          <text id="OAT_ro" transform="translate(1470 750)">15</text>
+          <text transform="translate(1510 750)">°C</text>
+        </g>
+
+        <g id="HSI_ovly">
+          <text id="OAT_ro" transform="translate(1400 790)">No Ovly</text>
+        </g>
+      </g>
+    </g>
+  </svg>
+  <script src="static/controls.js"></script>
+  <script type="text/javascript">
+    let svgElem = document.getElementById("mainSvg");
+    addControls(svgElem);
+  </script>
+
+  <script type="text/javascript">
+    function degrees(radians) {
+      return radians * 180 / Math.PI;
+    }
+
+    function radians(degrees) {
+      return degrees * Math.PI / 180;
+    }
+
+    function feet(meters) {
+      return meters / 0.3048;
+    }
+  </script>
+
+  <script type="text/javascript">
+    let altTapeHTML = [];
+    for (let alt = 0; alt <= 20000; alt += 1000) {
+      altTapeHTML.push(`
+        <g transform="translate(0 ${-alt})">
+          <path
+            d="M0 0 h50 M0 -100 h50 M0 -200 h50 M0 -300 h50 M0 -400 h50 M0 100 h50 M0 200 h50 M0 300 h50 M0 400 h50 M0 500 h50"
+            stroke-width="10" />
+          <g stroke-width="5" fill="none">
+            <path d="m0 0 l150 -150 v-200 l-150 -150" />
+            <path d="m0 0 l150 150 v200 l-150 150 " />
+            <path d="m0 0 l150 -110 v-40" />
+            <path d="m0 0 l150 110 v40" />
+          </g>
+          <text x="310" y="0">${alt}</text>
+          <text x="310" y="500">${alt - 500}</text>
+        </g>
+      `);
+    }
+    let altTape = document.getElementById("altTape");
+    altTape.innerHTML = altTapeHTML.join("") + altTape.innerHTML;
+
+    let vsidialHTML = [];
+    const textR = 165;
+    for (let vsi = -20; vsi <= 20; vsi += 1) {
+      let angle = vsi * 8;
+      if (vsi % 5 === 0) {
+        vsidialHTML.push(`
+          <path d="M-275 0 h75" transform="rotate(${angle})" />
+          <text x="${-textR * Math.cos(radians(angle))}" y="${-textR * Math.sin(radians(angle))}"
+            stroke="none">${Math.abs(vsi)}</text>
+        `);
+      } else if (Math.abs(vsi) < 10) {
+        vsidialHTML.push(`
+          <path d="M-275 0 h50" transform="rotate(${angle})" />
+        `);
+      }
+    }
+    let vsidial = document.getElementById("vsidialDial");
+    vsidial.innerHTML = vsidial.innerHTML + vsidialHTML.join("");
+
+    let iasTapeHTML = [];
+    for (let ias = 0; ias <= 400; ias += 10) {
+      iasTapeHTML.push(`
+        <path d="m0 ${-ias} h-10" />
+        <text x="-12" y="${-ias}" stroke="none">${ias}</text>`);
+    }
+    let iasTapeTicks = document.getElementById("iasTapeTicks");
+    iasTapeTicks.innerHTML = iasTapeTicks.innerHTML + iasTapeHTML.join("");
+
+    let pitchHTML = [];
+    for (let pitch = -50; pitch <= 50; pitch += 10) {
+      if (pitch == 0) continue;
+
+      pitchHTML.push(`
+        <text x="-13" y="${-pitch}" text-anchor="end" stroke="none">${Math.abs(pitch)}</text>
+        <text x="13" y="${-pitch}" text-anchor="start" stroke="none">${Math.abs(pitch)}</text>
+        <path d="m-12 ${-pitch} h24" />
+        <path d="m-6 ${-pitch + Math.sign(pitch) * 5} h12" />
+      `);
+    }
+    let adiInnerHorizon = document.getElementById("adiInnerHorizon");
+    adiInnerHorizon.innerHTML = adiInnerHorizon.innerHTML + pitchHTML.join("");
+
+    let rhtTapeHTML = [];
+    for (let rht = 100; rht <= 2500; rht += 100) {
+      rhtTapeHTML.push(`
+        <text x="80" y="${-rht}" stroke="none">${rht}</text>
+        <path d="m0 ${-rht} h75"/>
+        <path d="m0 ${-rht + 20} h50"/>
+        <path d="m0 ${-rht + 40} h50"/>
+        <path d="m0 ${-rht + 60} h50"/>
+        <path d="m0 ${-rht + 80} h50"/>
+      `);
+    }
+    let rhtTape = document.getElementById("rhtTape");
+    rhtTape.innerHTML = rhtTape.innerHTML + rhtTapeHTML.join("");
+
+    let hsiWheelHTML = [];
+    for (let hdg = 0; hdg < 360; hdg += 5) {
+      let idx = hdg / 5;
+      hsiWheelHTML.push(`
+        <path d="M0 -275 v${idx % 6 === 0 ? 50 : idx % 2 === 0 ? 35 : 20}"
+          transform="rotate(${hdg})" stroke="white" stroke-width="7" />
+      `);
+    }
+    let hsiWheel = document.getElementById("hsiWheel");
+    hsiWheel.innerHTML = hsiWheel.innerHTML + hsiWheelHTML.join("");
+  </script>
+
+  <script type="text/javascript">
+    var socket = io();
+    var config = {
+      show_alt_target: true,
+      ias_never_exceed: 167,
+      show_ias_target: true,
+      show_vsi_target: true,
+      rotate_adi_target: true,
+      show_adi_target: true,
+      adi_target_roll: true,
+      adi_target_yaw: false,
+      show_flightpath: true,
+      show_retrograde: false,
+      move_roll_ticks: false,
+      sideslip_max: 15,
+      rpm_e_good_low: 0.97,
+      rpm_e_good_high: 1.03,
+      rpm_e_warn_low: 0.97,
+      rpm_e_warn_high: 1.03,
+      rpm_r_good_low: 0.97,
+      rpm_r_good_high: 1.03,
+      rpm_r_warn_low: 0.90,
+      rpm_r_warn_high: 1.10,
+      traffic_range: 18520,
+    };
+
+    function updateOptional(value, element, decimal = 0, width = 1) {
+      if (value !== null && isFinite(value)) {
+        element.textContent = value.toFixed(decimal).padStart(width, "0");
+        element.setAttribute("fill", "white");
+      } else {
+        element.textContent = "---";
+        element.setAttribute("fill", "var(--pfdAmber)");
+      }
+    }
+
+    function updateIAS(ias) {
+      // treat missing value as zero, also don't display negative values
+      if (!ias || ias < 0)
+        ias = 0;
+      document.getElementById("iasTape").setAttribute("transform", `translate(0 ${ias})`);
+      let iasSingle = ias % 10;
+      let iasTens = Math.floor(ias / 10) % 10;
+      let iasHundreds = Math.floor(ias / 100);
+      document.getElementById("iasReadoutTape").setAttribute("transform", `translate(0 ${iasSingle})`);
+
+      document.getElementById("iasTensValue").textContent = String(iasTens);
+      if (iasSingle > 9.0) {
+        // Animate changing the digit to next
+        document.getElementById("iasTensNext").textContent = String(iasTens + 1);
+        document.getElementById("iasTensTape").setAttribute("transform", `translate(0 ${iasSingle % 1.0})`);
+        document.getElementById("iasTensNext").setAttribute("display", "block");
+        if (iasTens == 9) {
+          document.getElementById("iasHundredsNext").textContent = String(iasHundreds + 1);
+          document.getElementById("iasHundredsTape").setAttribute("transform", `translate(0 ${iasSingle % 1.0})`);
+          document.getElementById("iasHundredsNext").setAttribute("display", "block");
+        } else {
+          document.getElementById("iasHundredsTape").setAttribute("transform", `translate(0 0)`);
+          document.getElementById("iasHundredsNext").setAttribute("display", "none");
+        }
+      } else {
+        document.getElementById("iasTensTape").setAttribute("transform", `translate(0 0)`);
+        document.getElementById("iasTensNext").setAttribute("display", "none");
+        document.getElementById("iasHundredsTape").setAttribute("transform", `translate(0 0)`);
+        document.getElementById("iasHundredsNext").setAttribute("display", "none");
+      }
+
+      document.getElementById("iasHundredsValue").textContent = String(iasHundreds);
+    }
+
+    function updateGS(groundspeed) {
+      updateOptional(groundspeed, document.getElementById("iasGroundspeedValue"), 0, 3);
+    }
+
+    function updateADI(roll, pitch) {
+      let horizonTransform = `rotate(${-roll}) translate(0 ${pitch}) `
+      document.getElementById("adiHorizon").setAttribute("transform", horizonTransform);
+      document.getElementById("adiInnerHorizon").setAttribute("transform", horizonTransform);
+      document.getElementById("adiRollTicks").setAttribute("transform", `rotate(${config.move_roll_ticks ? -roll : 0})`);
+      document.getElementById("adiRoll").setAttribute("transform", `rotate(${config.move_roll_ticks ? 0 : -roll})`);
+    }
+
+    function updateFPV(vx, vy, vz) {
+      document.getElementById("flightpathIndicator").setAttribute("display", (vx > 0 && config.show_flightpath) ? "block" : "none");
+      document.getElementById("flightpathRetrogradeIndicator").setAttribute("display", (vx < 0 && config.show_retrograde) ? "block" : "none");
+
+      let alpha = degrees(Math.atan2(vz, vx));
+      let beta = degrees(Math.atan2(vy, vx));
+      if (vx > 0) {
+        flightpathIndicator.setAttribute("transform", `translate(${beta} ${alpha})`);
+      } else if (vx < 0) {
+        flightpathRetrograde.setAttribute("transform", `translate(${beta - 180} ${alpha - 180})`);
+      }
+    }
+
+    function updateSlip(ay, az) {
+      let slip = degrees(Math.atan2(ay, az));
+      let relative = Math.max(-1, Math.min(1, slip / config.sideslip_max));
+      document.getElementById("adiSlipskidIndicator").setAttribute("transform", `translate(${relative})`);
+    }
+
+    function updateALT(alt) {
+      // treat missing value as zero
+      if (!alt)
+        alt = 0;
+      document.getElementById("altTape").setAttribute("transform", `translate(0 ${alt})`)
+      let altHundreds = Math.abs(alt / 100) % 10;
+      let altThousands = Math.abs(alt / 1000);
+      document.getElementById("altHundredsValue").textContent = String(Math.floor(altHundreds));
+      document.getElementById("altThousandsValue").textContent = String(Math.floor(altThousands));
+      if (Math.abs(alt) % 100 > 80) {
+        // Animate changing the digit to next
+        document.getElementById("altHundredsNext").textContent = String(Math.ceil(altHundreds) % 10);
+        document.getElementById("altHundredsTape").setAttribute("transform", `translate(0 ${(alt % 20) / 20})`);
+        document.getElementById("altHundredsNext").setAttribute("display", "block");
+        if (altHundreds > 9.0) {
+          document.getElementById("altThousandsNext").textContent = String(Math.ceil(altThousands));
+          document.getElementById("altThousandsTape").setAttribute("transform", `translate(0 ${(alt % 20) / 20})`);
+          document.getElementById("altThousandsNext").setAttribute("display", "block");
+        } else {
+          document.getElementById("altThousandsTape").setAttribute("transform", `translate(0 0)`);
+          document.getElementById("altThousandsNext").setAttribute("display", "none");
+        }
+      } else {
+        document.getElementById("altHundredsTape").setAttribute("transform", `translate(0 0)`);
+        document.getElementById("altHundredsNext").setAttribute("display", "none");
+        document.getElementById("altThousandsTape").setAttribute("transform", `translate(0 0)`);
+        document.getElementById("altThousandsNext").setAttribute("display", "none");
+      }
+
+      let tapeY = Math.abs(alt) % 100 * Math.sign(alt);
+      if (Math.abs(alt) >= 100 && Math.abs(tapeY) <= 20) { // Only show the part 20-00-20 if close to 0 altitude
+        tapeY += 100 * Math.sign(alt);
+      }
+      document.getElementById("altReadoutTape").setAttribute("transform", `translate(0 ${tapeY})`);
+
+      document.getElementById("altReadoutNegative").setAttribute("display", alt < 0 ? "block" : "none");
+    }
+
+    const qnhValue = document.getElementById("altQnhValue");
+    function updateQNH(qnh) {
+      if (qnh === null) {
+        qnhValue.innerHTML = "STD";
+        qnhValue.setAttribute("fill", "var(--pfdCyan)");
+      } else {
+        qnhValue.innerHTML = String(qnh);
+        qnhValue.setAttribute("fill", "white");
+      }
+    }
+
+    const vsiIndicator = document.getElementById("vsiIndicator");
+    const vsiX1 = parseFloat(vsiIndicator.getAttribute("x1"));
+    const vsiX2 = parseFloat(vsiIndicator.getAttribute("x2"));
+    function vsiAngleRadians(verticalSpeed) {
+      let direction = Math.sign(verticalSpeed);
+      let value = Math.abs(verticalSpeed);
+      const maxAngleDeg = 37;
+      let angleDeg = (value <= 10) ? (value / 10 * 25) : // first 10 hft/min is 25 degrees
+        (value - 10 + 25); // above 10 it's 10 deg per 10 hft/min
+      angleDeg = Math.min(angleDeg, maxAngleDeg); // limit to maximum angle
+      return radians(angleDeg) * direction;
+    }
+    function updateVSI(verticalSpeed) {
+      let angle = vsiAngleRadians(verticalSpeed);
+
+      // positive vertical speed is lower y in svg
+      vsiIndicator.setAttribute("y1", -Math.sin(angle) * vsiX1);
+      vsiIndicator.setAttribute("y2", -Math.sin(angle) * vsiX2);
+
+      let dialAngle = Math.max(-170, Math.min(170, verticalSpeed * 8));
+      document.getElementById("vsidialIndicator").setAttribute("transform", `rotate(${dialAngle})`);
+    }
+
+    function updateRHT(rht) {
+      updateOptional(rht, document.getElementById("rhtValue"));
+      if (rht !== null && isFinite(rht)) {
+        document.getElementById("rhtTape").setAttribute("transform", `translate(0 ${rht})`);
+      } else {
+        document.getElementById("rhtTape").setAttribute("transform", `translate(0 0)`);
+      }
+    }
+
+    const trafficVolumeNames = ["OT", "PD", "TA", "RA"];
+    const trafficPerimeterRadius = document.getElementById("hsiTrafficPerimeter").getAttribute("r");
+    function updateTCAS(tcas) {
+      let counts = [0, 0, 0, 0];
+      // when TCAS is null, update the children count with zeros and return early
+      if (tcas !== null) {
+        for (const t of tcas) {
+          if (t.dist <= config.traffic_range) {
+            counts[t.vol] += 1;
+          }
+        }
+      }
+      for (let volumeIndex = 0; volumeIndex < 4; volumeIndex++) {
+        const volume = trafficVolumeNames[volumeIndex]
+        const volumeGroup = document.getElementById("hsiTraffic" + volume);
+        const count = counts[volumeIndex];
+        if (volumeGroup.childElementCount > count) {
+          for (let i = volumeGroup.childElementCount - count; i > 0; i--) {
+            volumeGroup.lastChild.remove();
+          }
+        } else if (volumeGroup.childElementCount < count) {
+          for (let i = count - volumeGroup.childElementCount; i > 0; i--) {
+            let clone = document.getElementById("traffic" + volume).cloneNode(true);
+            volumeGroup.appendChild(clone);
+          }
+        }
+      }
+      if (tcas === null) return;
+
+      let nextChildIndex = [0, 0, 0, 0];
+      for (const t of tcas) {
+        if (t.dist <= config.traffic_range) {
+          const group = document.getElementById("hsiTraffic" + trafficVolumeNames[t.vol]);
+          let blip = group.children[nextChildIndex[t.vol]];
+          nextChildIndex[t.vol] += 1;
+
+          let r = t.dist / config.traffic_range * trafficPerimeterRadius;
+          let y = -Math.cos(t.brg) * r;
+          let x = Math.sin(t.brg) * r;
+          blip.setAttribute("transform", `translate(${x}, ${y})`);
+
+          let hectofeet = Math.round(feet(t.alt) / 100.0);
+          let sign = hectofeet > 0 ? "+" : hectofeet < 0 ? "-" : "";
+          let altText = sign + Math.abs(hectofeet).toString().padStart(2, "0");
+          let textElement = blip.querySelector("text");
+          textElement.innerHTML = altText;
+          let ty = parseFloat(textElement.getAttribute("y"));
+          textElement.setAttribute("y", (hectofeet >= 0 ? -1 : 1) * Math.abs(ty));
+          blip.querySelector("path").setAttribute("transform", `scale(1, ${Math.sign(t.vsi)})`)
+        }
+      }
+    }
+
+    function updateHSI(hdg) {
+      hdg = (hdg % 360 + 360) % 360; // ensure values are always between 0 and 360
+      document.getElementById("hsiWheel").setAttribute("transform", `rotate(${-hdg})`);
+      document.getElementById("hsiValue").textContent = Math.round(hdg).toFixed(0).padStart(3, "0");
+    }
+
+    function updateRPM(rpmE, rpmR) {
+      for (const part of [[rpmE, "E"], [rpmR, "R"]]) {
+        const rpm = part[0];
+        const P = part[1];
+        const p = P.toLowerCase();
+
+        const x = Math.max(0, Math.min(120, rpm * 100));
+        const indicator = document.getElementById(`rpm${P}Indicator`);
+        const fillLow = document.getElementById(`rpm${P}FillLow`);
+        const fillHigh = document.getElementById(`rpm${P}FillHigh`);
+        const name = document.getElementById(`rpm${P}Name`);
+        const readout = document.getElementById(`rpm${P}Readout`);
+
+        indicator.setAttribute("transform", `translate(${x})`);
+        fillLow.setAttribute("fill", "black");
+        fillHigh.setAttribute("fill", "black");
+        name.setAttribute("fill", "white");
+        if (rpm >= config[`rpm_${p}_good_low`] && rpm <= config[`rpm_${p}_good_high`]) {
+          indicator.setAttribute("fill", "var(--pfdGreen)");
+        } else if (rpm >= config[`rpm_${p}_warn_low`] && rpm <= config[`rpm_${p}_warn_high`]) {
+          indicator.setAttribute("fill", "var(--pfdAmber)");
+        } else {
+          indicator.setAttribute("fill", "var(--pfdRed)");
+          if (rpm > 1.0) {
+            fillHigh.setAttribute("fill", "var(--pfdRed)");
+          } else {
+            fillLow.setAttribute("fill", "var(--pfdRed)");
+          }
+          name.setAttribute("fill", "var(--pfdRed)");
+        }
+
+        readout.textContent = `${Math.round(rpm * 100)}%`;
+      }
+    }
+
+    const adiTargetIndicator = document.getElementById("adiTargetIndicator");
+    const adiRollTargetIndicator = document.getElementById("adiRollTargetIndicator")
+    const altTargetIndicator = document.getElementById("altTargetIndicator");
+    const altTargetReadout = document.getElementById("altTargetReadout");
+    const altTargetReadoutValue = document.getElementById("altTargetReadoutValue");
+    const iasTargetIndicator = document.getElementById("iasTargetIndicator");
+    const iasTargetReadout = document.getElementById("iasTargetReadout");
+    const iasTargetReadoutValue = document.getElementById("iasTargetReadoutValue");
+    const vsiTargetIndicator = document.getElementById("vsiTargetIndicator");
+    const vsiTargetX1 = parseFloat(vsiTargetIndicator.getAttribute("x1"));
+    const vsiTargetX2 = parseFloat(vsiTargetIndicator.getAttribute("x2"));
+    const vsiTargetIndicatorContour = document.getElementById("vsiTargetIndicatorContour");
+    const vsiTargetContourX1 = parseFloat(vsiTargetIndicator.getAttribute("x1"));
+    const vsiTargetContourX2 = parseFloat(vsiTargetIndicator.getAttribute("x2"));
+    const hsiTargetIndicator = document.getElementById("hsiTargetIndicator");
+    const hsiTargetValue = document.getElementById("hsiTargetValue");
+    function updateTarget(s) {
+      if (s.trgt.att) {
+        const targetRoll = degrees(s.trgt.att[0]);
+        adiRollTargetIndicator.setAttribute("display", "block");
+        adiRollTargetIndicator.setAttribute("transform", `rotate(${targetRoll})`);
+
+        const trgtHdg = degrees(s.trgt.att[2]);
+        const targetHeading = (trgtHdg % 360 + 360) % 360;
+        hsiTargetIndicator.setAttribute("display", "block");
+        hsiTargetIndicator.setAttribute("transform", `rotate(${targetHeading})`);
+        hsiTargetValue.setAttribute("display", "block");
+        hsiTargetValue.textContent = Math.round(targetHeading).toFixed(0).padStart(3, "0");
+      }
+      if (s.trgt.att && s.att) {
+        const roll = degrees(s.att[0]);
+        const pitch = degrees(s.att[1]);
+        const yaw = degrees(s.att[2]);
+        const targetRoll = degrees(s.trgt.att[0]);
+        const targetPitch = degrees(s.trgt.att[1]);
+        const targetYaw = degrees(s.trgt.att[2]);
+        adiTargetIndicator.setAttribute("display", config.show_adi_target ? "block" : "none");
+        let horizonTransform = `rotate(${-roll}) translate(0 ${pitch})`;
+        let targetTransform = horizonTransform + ` translate(0 ${-targetPitch})`;
+        if (config.adi_target_yaw) {
+          targetTransform = targetTransform + ` translate(${targetYaw - yaw})`;
+        }
+        if (config.adi_target_roll) {
+          targetTransform = targetTransform + ` rotate(${targetRoll})`
+        }
+        adiTargetIndicator.setAttribute("transform", targetTransform);
+      }
+      if (s.trgt.v_ned) {
+        vsiTargetIndicator.setAttribute("display", config.show_vsi_target ? "block" : "none");
+        vsiTargetIndicatorContour.setAttribute("display", config.show_vsi_target ? "block" : "none");
+
+        let angle = vsiAngleRadians(feet(s.trgt.v_ned[2]) * -0.6); // from m/s down to 100ft/min up
+
+        // positive vertical speed is lower y in svg
+        vsiTargetIndicator.setAttribute("y1", -Math.sin(angle) * vsiTargetX1);
+        vsiTargetIndicator.setAttribute("y2", -Math.sin(angle) * vsiTargetX2);
+        vsiTargetIndicatorContour.setAttribute("y1", -Math.sin(angle) * vsiTargetContourX1);
+        vsiTargetIndicatorContour.setAttribute("y2", -Math.sin(angle) * vsiTargetContourX2);
+      }
+      if (s.trgt.instr) {
+        // when a.b = null the test if ("b" in a) returns true, but treat zero as defined
+        if (s.trgt.instr.alt || s.trgt.instr.alt === 0) {
+          altTargetIndicator.setAttribute("display", config.show_alt_target ? "block" : "none");
+          altTargetIndicator.setAttribute("transform", `translate(0 ${-s.trgt.instr.alt})`);
+          altTargetReadout.setAttribute("display", config.show_alt_target ? "block" : "none");
+          altTargetReadoutValue.textContent = Math.round(s.trgt.instr.alt);
+        }
+        if (s.trgt.instr.ias || s.trgt.instr.ias === 0) {
+          iasTargetIndicator.setAttribute("display", config.show_ias_target ? "block" : "none");
+          iasTargetIndicator.setAttribute("transform", `translate(0 ${-s.trgt.instr.ias})`);
+          iasTargetReadout.setAttribute("display", config.show_ias_target ? "block" : "none");
+          iasTargetReadoutValue.textContent = Math.round(s.trgt.instr.ias);
+        }
+      }
+    }
+
+    function updateLimits() {
+      document.getElementById("iasVne").setAttribute("transform", `translate(0 ${-config.ias_never_exceed})`);
+      for (const P of ["E", "R"]) {
+        const p = P.toLowerCase();
+
+        for (const Area of ["Good", "Warn"]) {
+          const area = Area.toLowerCase();
+
+          const tape = document.getElementById(`rpm${P}Tape${Area}`);
+          const low = config[`rpm_${p}_${area}_low`];
+          const high = config[`rpm_${p}_${area}_high`];
+
+          tape.setAttribute("x", 100 * low);
+          tape.setAttribute("width", 100 * (high - low));
+        }
+      }
+    }
+
+    socket.on("smol", (s) => {
+      if ("att" in s) {
+        updateADI(degrees(s.att[0]), degrees(s.att[1]));
+        updateHSI(degrees(s.att[2]));
+      }
+      if ("v_ned" in s) {
+        updateVSI(feet(s.v_ned[2]) * -0.6); // from m/s down to 100ft/min up
+      }
+      if ("v_body" in s) {
+        updateFPV(s.v_body[0], s.v_body[1], s.v_body[2]); // units irrelevant
+      }
+      if ("a_body" in s) {
+        updateSlip(s.a_body[1], s.a_body[2]); // units irrelevant
+      }
+      if ("hrpm" in s) {
+        updateRPM(s.hrpm[1], s.hrpm[0]);
+      }
+      if ("instr" in s) {
+        if ("ias" in s.instr) updateIAS(s.instr.ias);
+        if ("gs" in s.instr) updateGS(s.instr.gs);
+        if ("alt" in s.instr) updateALT(s.instr.alt);
+        if ("qnh" in s.instr) updateQNH(s.instr.qnh);
+        if ("ralt" in s.instr) updateRHT(s.instr.ralt);
+        if ("tcas" in s.instr) updateTCAS(s.instr.tcas);
+      }
+      if ("trgt" in s) {
+        updateTarget(s);
+      }
+    });
+    socket.on("config", (s) => {
+      if ("pfd" in s) {
+        config = s.pfd;
+        updateLimits();
+      }
+    });
+    socket.emit("config_request", {});
+  </script>
+</body>
+
+</html>

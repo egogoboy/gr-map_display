@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Lidia Ship Approach</title>
+  <link rel="stylesheet" href="static/style.css" />
+  <script src="static/socket.io.js"></script>
+</head>
+
+<body>
+  <svg id="mainSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2200 1200" preserveAspectRatio="xMidYMid meet">
+    <g id="minimalRegion" data-extents="300 1400 900 800"></g>
+    <g id="horizontalRegion" data-extents="-100 2200 1300 -200"></g>
+    <g id="squareRegion" data-extents="-600 2300 1800 -100"></g>
+    <g transform="translate(1100 600)" fill="none">
+      <g transform="scale(10)" stroke="white">
+        <g id="helideck" transform="translate(0 0)" stroke-width="0.5">
+          <path d="M-120 -30 l40 -20 h180 v100 h-180 l-40 -20 z M-120 -30 l220 55 M-120 30 l220 -55 M50 -50 v100" />
+          <circle cx="0" cy="0" r="20" />
+        </g>
+      </g>
+      <g id="aircraft" class="aircraft" stroke-width="10" stroke="var(--pfdGreen)">
+        <path d="M-200 0 h100 M200 0 h-100 M0 200 v-100 M-30 0 h60 M0 -30 v60 M0 -195 l-60 100 h120 z" />
+        <circle cx="0" cy="0" r="200" />
+      </g>
+    </g>
+  </svg>
+
+  <script src="static/controls.js"></script>
+  <script type="text/javascript">
+    let svgElem = document.getElementById("mainSvg");
+    addControls(svgElem);
+  </script>
+
+  <script type="text/javascript">
+    var socket = io();
+
+    socket.on("echo", (s) => {
+      console.log(s);
+    });
+  </script>
+
+  <script type="text/javascript">
+    var socket = io();
+    var config = {
+      approach: {
+        nominal_alt: 3,
+        camera_height: 10,
+      }
+    };
+
+    function degrees(radians) {
+      return radians * 180 / Math.PI;
+    }
+
+    function radians(degrees) {
+      return degrees * Math.PI / 180;
+    }
+
+    function errorFill(difference) {
+      var e = Math.abs(difference);
+      if (e <= 0.03) return "#0f0";
+      else if (e <= 0.05) return "#ff0";
+      else return "#f00";
+    }
+
+    function limitRange(elem, oneSided = false) {
+      const outsideLimit = 10;
+      let rangeMin = oneSided ? 0 : -500;
+      let rangeMax = oneSided ? 1000 : 500;
+      let x = elem.transform.baseVal.getItem(0).matrix.e;
+      let y = elem.transform.baseVal.getItem(0).matrix.f;
+
+      // Clamp translate
+      elem.transform.baseVal.getItem(0).matrix.e = Math.max(
+        rangeMin - outsideLimit,
+        Math.min(rangeMax + outsideLimit, x)
+      );
+      elem.transform.baseVal.getItem(0).matrix.f = Math.max(
+        rangeMin - outsideLimit,
+        Math.min(rangeMax + outsideLimit, y)
+      );
+
+      let inside = x >= rangeMin && x <= rangeMax && y >= rangeMin && y <= rangeMax;
+      elem.style.stroke = inside ? "inherit" : "#f00";
+    }
+
+    const helideck = document.getElementById("helideck");
+    const initialStroke = helideck.getAttribute('stroke-width');
+    function updateDeck(s) {
+      let alt = -s.ned[2]; // Altitude above deck in meters
+      let scale = (config.approach.nominal_alt + config.approach.camera_height) / (alt + config.approach.camera_height);
+      let yaw = 0;
+      if ("att" in s) {
+        yaw = degrees(s.att[2]);
+      }
+      helideck.setAttribute("transform", `rotate(${-yaw}) scale(${scale}) translate(${-s.ned[1]} ${s.ned[0]})`);
+      helideck.setAttribute("stroke-width", initialStroke / scale);
+    }
+
+    socket.on("smol", (s) => {
+      if ("ned" in s) updateDeck(s);
+    });
+    socket.on("config", (s) => {
+      config = s;
+    });
+    socket.emit("config_request", {});
+  </script>
+
+</body>
+
+</html>

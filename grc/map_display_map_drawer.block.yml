@@ -1,0 +1,13 @@
+id: map_display_map_drawer
+label: Map Drawer
+category: '[visualization]'
+file_format: 1
+flags: ''
+templates:
+  imports: from map_display import map_drawer
+  make: map_drawer.map_drawer()
+parameters: []
+inputs:
+  - domain: message
+    id: in
+outputs: []

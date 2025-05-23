@@ -1,0 +1,5 @@
+install(
+    DIRECTORY map_display
+    DESTINATION ${GNURADIO_PYTHON_DIR}
+    FILES_MATCHING PATTERN "*.py"
+)

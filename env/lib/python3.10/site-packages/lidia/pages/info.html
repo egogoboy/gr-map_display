@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+  <title>Lidia info</title>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="static/style.css" />
+  <script src="static/socket.io.js"></script>
+</head>
+
+<body>
+  <div class="content">
+    <h1>Lidia info</h1>
+    <h2>Available displays:</h2>
+    <ul>
+      <li><a href="/pfd">Primary Flight Display</a></li>
+      <li><a href="/controls">Controls View (aka RPC task)</a></li>
+      <li><a href="/approach">Ship Approach</a></li>
+    </ul>
+    <h2>Configuration:</h2>
+    <pre id="config">waiting for server...</pre>
+    <h2>Latest state:</h2>
+    <pre id="smol">waiting for server...</pre>
+  </div>
+
+  <script type="text/javascript">
+    var socket = io();
+    socket.on("config", (s) => {
+      document.getElementById("config").textContent = JSON.stringify(s, null, 2); // indent 2 spaces
+    });
+    socket.on("smol", (s) => {
+      document.getElementById("smol").textContent = JSON.stringify(s, null, 2); // indent 2 spaces
+    });
+    socket.emit("config_request", {});
+  </script>
+</body>
+
+</html>

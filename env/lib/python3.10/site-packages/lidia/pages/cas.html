@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Lidia CAS</title>
+  <link rel="stylesheet" href="static/style.css" />
+  <script src="static/socket.io.js"></script>
+  <style>
+    h2 {
+      font-size: x-large;
+      text-transform: uppercase;
+      border-bottom: 0.2em solid;
+    }
+
+    ul {
+      list-style: none;
+    }
+
+    li {
+      font-size: larger;
+      text-transform: uppercase;
+      margin-bottom: 0.5em;
+    }
+
+    .container {
+      margin: 0em 2em;
+    }
+
+    .inactive {
+      opacity: 0.5;
+    }
+
+    .warning {
+      color: var(--pfdRed);
+    }
+
+    .warningHighlight {
+      color: white;
+      background-color: var(--pfdRed);
+    }
+
+    .caution {
+      color: var(--pfdAmber);
+    }
+
+    .cautionHighlight {
+      color: black;
+      background-color: var(--pfdAmber);
+    }
+
+    .advisory {
+      color: var(--pfdCyan);
+    }
+
+    .advisoryHighlight {
+      color: white;
+      background-color: var(--pfdCyan);
+    }
+
+    .status {
+      color: white;
+    }
+
+    .statusHighlight {
+      color: black;
+      background-color: white;
+    }
+
+    .button {
+      padding: 0.5em;
+      font-size: 2em;
+      font-weight: 700;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="warning">
+      <h2>Warning</h2>
+      <ul id="warningList"></ul>
+    </div>
+    <div class="caution">
+      <h2>Caution</h2>
+      <ul id="cautionList"></ul>
+    </div>
+    <div class="advisory">
+      <h2>Advisory</h2>
+      <ul id="advisoryList"></ul>
+    </div>
+    <div class="status">
+      <h2>Status</h2>
+      <ul id="statusList"></ul>
+    </div>
+    <!-- Sending from browser to source would complicate a lot, disabled for now -->
+    <!-- <button id="ackButton" class="button">ACK</button> -->
+  </div>
+
+  <script type="text/javascript">
+    var socket = io();
+
+    socket.on("echo", (s) => {
+      console.log(s);
+    });
+  </script>
+
+  <script type="text/javascript">
+    var socket = io();
+    var config = {
+      cas: {
+        // Default events for development, this is replaced with configured events list, even if it is empty
+        events: {
+          101: { category: 1, text: "Require immediate flight crew awareness and response" },
+          102: { category: 2, text: "Require immediate flight crew awareness and subsequent response" },
+          103: { category: 3, text: "Require flight crew awareness and a possible future response" },
+          104: { category: 4, text: "Other operational status" },
+        }
+      }
+    };
+
+    const listElems = {
+      1: document.getElementById("warningList"),
+      2: document.getElementById("cautionList"),
+      3: document.getElementById("advisoryList"),
+      4: document.getElementById("statusList"),
+    };
+    function updateEvents(cas) {
+      let items = { 1: [], 2: [], 3: [], 4: [] };
+      for (const msg of cas.msgs) {
+        let msg_id = msg[0];
+        let blinking = msg[1];
+
+        let event = config.cas.events[msg_id];
+        if (event === undefined) {
+          console.error(`CAS event with id '${msg_id}' not found in configuration`);
+          continue;
+        }
+
+        let elem = document.createElement("li");
+        elem.textContent = event.text;
+        elem.dataset.category = event.category;
+        if (blinking) elem.classList.add("blinking");
+        items[event.category].push(elem);
+      }
+
+      for (let i = 1; i <= 4; i++) {
+        listElems[i].replaceChildren(...items[i]);
+      }
+    }
+
+    // // Sending from browser to source would complicate a lot, disabled for now
+    // function clickAck(event) {
+    //   socket.emit("input", { "cas": "ack" });
+    // }
+    // document.getElementById("ackButton").addEventListener("click", clickAck);
+
+    const highlightClasses = {
+      1: "warningHighlight",
+      2: "cautionHighlight",
+      3: "advisoryHighlight",
+      4: "statusHighlight",
+    }
+    var blinkingHighlight = false;
+    function toggleBlink() {
+      blinkingHighlight = !blinkingHighlight;
+      let blinkingElems = document.getElementsByClassName('blinking');
+      for (const elem of blinkingElems) {
+        let highlightClass = highlightClasses[elem.dataset.category];
+
+        if (blinkingHighlight) {
+          elem.classList.add(highlightClass);
+        } else {
+          elem.classList.remove(highlightClass);
+        }
+      }
+    }
+    setInterval(toggleBlink, 500);
+
+    socket.on("smol", (s) => {
+      if ("cas" in s) updateEvents(s.cas);
+    });
+    socket.on("config", (s) => {
+      config = s;
+    });
+    socket.emit("config_request", {});
+
+    // Testing only
+    updateEvents({ msgs: [] });
+    setTimeout(() => updateEvents({ msgs: [[101, true], [102, true]] }), 2000);
+    setTimeout(() => updateEvents({ msgs: [[101, false], [102, true]] }), 5000);
+    setTimeout(() => updateEvents({ msgs: [[101, false], [102, false]] }), 10000);
+    setTimeout(() => updateEvents({ msgs: [[102, false], [103, true]] }), 12000);
+    setTimeout(() => updateEvents({ msgs: [[102, false], [103, false]] }), 17000);
+    setTimeout(() => updateEvents({ msgs: [[102, false], [103, false], [104, false]] }), 22000);
+  </script>
+
+</body>
+
+</html>

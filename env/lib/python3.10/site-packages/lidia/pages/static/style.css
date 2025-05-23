@@ -1,0 +1,106 @@
+:root {
+  --pfdGreen: #07ed35;
+  --pfdAmber: #ffbf00;
+  --pfdRed: #ff0f0f;
+  --pfdGround: #965b27;
+  --pfdSky: #1e88f5;
+  --pfdMagenta: #ff00c8;
+  --pfdCyan: #00ffff;
+}
+
+@font-face {
+  font-family: "Roboto Mono";
+  src: url("RobotoMono-Thin.ttf") format("truetype");
+  font-weight: 100;
+}
+
+@font-face {
+  font-family: "Roboto Mono";
+  src: url("RobotoMono-ExtraLight.ttf") format("truetype");
+  font-weight: 200;
+}
+
+@font-face {
+  font-family: "Roboto Mono";
+  src: url("RobotoMono-Light.ttf") format("truetype");
+  font-weight: 300;
+}
+
+@font-face {
+  font-family: "Roboto Mono";
+  src: url("RobotoMono-Regular.ttf") format("truetype");
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: "Roboto Mono";
+  src: url("RobotoMono-Medium.ttf") format("truetype");
+  font-weight: 500;
+}
+
+@font-face {
+  font-family: "Roboto Mono";
+  src: url("RobotoMono-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+}
+
+@font-face {
+  font-family: "Roboto Mono";
+  src: url("RobotoMono-Bold.ttf") format("truetype");
+  font-weight: 700;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  /* overflow: hidden; */
+  height: 100%;
+  width: 100%;
+  background-color: #000;
+  font-family: "Roboto Mono", monospace;
+}
+
+svg#mainSvg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  padding: 2em;
+  border: 3px solid #fff;
+  border-radius: 10px;
+  font-size: larger;
+  color: #fff;
+  background-color: #4d4d4d;
+
+  opacity: 0;
+}
+
+.controls:hover {
+  opacity: 1;
+}
+
+.controls > p {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.content {
+  color: #fff;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  max-width: 60rem;
+  font-size: 1.2rem;
+}
+
+.content a {
+  color: var(--pfdCyan);
+}
