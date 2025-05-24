@@ -7,4 +7,4 @@ md build
 cd build
 cmake ..
 make -j$(nproc)
-make install```
+make install
