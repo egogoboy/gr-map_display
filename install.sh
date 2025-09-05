@@ -39,6 +39,13 @@ echo "[INFO] Installing Python requirements..."
 pip install --upgrade pip
 pip install -r requirements.txt
 
+echo "[INFO] Downloading aircraft_indicators..."
+git clone https://github.com/egogoboy/aircraft_indicators
+echo "[INFO] Installing aircraft_indicators..."
+cd aircraft_indicators
+pip install .
+cd ..
+
 # Сборка
 echo "[INFO] Building project..."
 mkdir -p build
