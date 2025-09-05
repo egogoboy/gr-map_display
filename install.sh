@@ -13,7 +13,7 @@ fi
 sudo apt update
 
 # Список необходимых пакетов
-DEPS="cmake make g++ python3 python3-venv python3-pip gnuradio gnuradio-dev"
+DEPS="cmake make g++ python3 python3-venv python3-pip gnuradio gnuradio-dev python3-pyqt5 python3-pyqt5.qtsvg python3-pyqt5.qtwebsockets"
 
 for pkg in $DEPS; do
     if dpkg -s $pkg &> /dev/null; then
