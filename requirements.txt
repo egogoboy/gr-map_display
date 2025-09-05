@@ -3,4 +3,4 @@ matplotlib
 requests
 pillow
 lidia
-pyqt5
+# pyqt5
