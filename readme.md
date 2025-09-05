@@ -3,8 +3,6 @@
 ### Установка
 В корне проекта
 ```bash
-md build
-cd build
-cmake ..
-make -j$(nproc)
-make install
+sudo chmod +x install.sh
+sudo ./install.sh
+```
