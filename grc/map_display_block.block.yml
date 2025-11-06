@@ -1,0 +1,17 @@
+id: map_display_block
+label: Map Drawer
+category: '[visualization]'
+flags: [python, cpp]
+
+templates:
+  imports: import map_display
+  make: map_display.display_block.make()
+
+parameters: []
+
+inputs:
+  - domain: message
+    id: in
+    label: Input (PMT dict)
+
+outputs: []
